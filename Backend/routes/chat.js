@@ -6,7 +6,9 @@ import multer from "multer";
 import fs from "fs";
 
 const router = express.Router();
-const upload = multer({ dest: "uploads/" });
+const uploadDir = process.env.VERCEL ? "/tmp/uploads" : "uploads/";
+fs.mkdirSync(uploadDir, { recursive: true });
+const upload = multer({ dest: uploadDir });
 
 // All chat routes require authentication
 router.use(auth);
