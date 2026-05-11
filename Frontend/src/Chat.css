@@ -10,14 +10,13 @@
     font-size: 0.9rem;
 }
 
-
 .gptDiv {
     text-align: left;
     font-size: 0.9rem;
 }
 
 .userMessage {
-    background-color: #323232;
+    background-color: var(--user-msg-bg);
     padding: 10px 20px;
     border-radius: 14px;
     margin-left: 15rem;
@@ -31,4 +30,132 @@
 
 pre {
     white-space: pre-wrap;
+}
+
+/* Empty State Styles */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    padding-top: 10rem;
+}
+
+.welcomeTitle {
+    font-size: 2.2rem;
+    font-weight: 600;
+    margin-bottom: 2.5rem;
+    color: var(--text-primary);
+}
+
+.suggestionPills {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pill {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    border-radius: 20px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.pill i {
+    color: var(--text-secondary);
+}
+
+.pill:hover {
+    background-color: var(--bg-hover-strong);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.pill:hover i {
+    color: var(--text-primary);
+}
+
+.featureCards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+}
+
+.featureCard {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.featureCard:hover {
+    background-color: var(--bg-hover-strong);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow) 0 8px 24px;
+}
+
+.cardIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.cardIcon i {
+    color: #fff;
+}
+
+.cardIcon.green { background-color: #22c55e; }
+.cardIcon.orange { background-color: #f97316; }
+.cardIcon.blue { background-color: #3b82f6; }
+.cardIcon.red { background-color: #ef4444; }
+
+.cardText {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.cardText h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.cardText p {
+    margin: 0;
+    margin-top: 0.2rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.chats.hidden {
+    display: none;
 }

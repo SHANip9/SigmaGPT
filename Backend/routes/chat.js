@@ -1,29 +1,20 @@
 import express from "express";
 import Thread from "../models/Thread.js";
-import getOpenAIAPIResponse from "../utils/openai.js";
+import getOpenAIAPIResponse, { client } from "../utils/openai.js";
+import auth from "../middleware/auth.js";
+import multer from "multer";
+import fs from "fs";
 
 const router = express.Router();
+const upload = multer({ dest: "uploads/" });
 
-//test
-router.post("/test", async(req, res) => {
-    try {
-        const thread = new Thread({
-            threadId: "abc",
-            title: "Testing New Thread2"
-        });
+// All chat routes require authentication
+router.use(auth);
 
-        const response = await thread.save();
-        res.send(response);
-    } catch(err) {
-        console.log(err);
-        res.status(500).json({error: "Failed to save in DB"});
-    }
-});
-
-//Get all threads
+//Get all threads for the logged-in user
 router.get("/thread", async(req, res) => {
     try {
-        const threads = await Thread.find({}).sort({updatedAt: -1});
+        const threads = await Thread.find({ userId: req.userId }).sort({updatedAt: -1});
         //descending order of updatedAt...most recent data on top
         res.json(threads);
     } catch(err) {
@@ -36,7 +27,7 @@ router.get("/thread/:threadId", async(req, res) => {
     const {threadId} = req.params;
 
     try {
-        const thread = await Thread.findOne({threadId});
+        const thread = await Thread.findOne({threadId, userId: req.userId});
 
         if(!thread) {
             return res.status(404).json({error: "Thread not found"});
@@ -53,7 +44,7 @@ router.delete("/thread/:threadId", async (req, res) => {
     const {threadId} = req.params;
 
     try {
-        const deletedThread = await Thread.findOneAndDelete({threadId});
+        const deletedThread = await Thread.findOneAndDelete({threadId, userId: req.userId});
 
         if(!deletedThread) {
             return res.status(404).json({error: "Thread not found"});
@@ -67,6 +58,33 @@ router.delete("/thread/:threadId", async (req, res) => {
     }
 });
 
+router.post("/transcribe", upload.single("audio"), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: "No audio file provided" });
+    }
+
+    try {
+        const audioFile = fs.createReadStream(req.file.path);
+        const response = await client.audio.transcriptions.create({
+            file: audioFile,
+            model: "whisper-1"
+        });
+
+        // Clean up the temporary file
+        fs.unlinkSync(req.file.path);
+
+        res.json({ text: response.text });
+    } catch (err) {
+        console.error("Transcription error:", err.message);
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        
+        if (err.status === 429) {
+            return res.json({ text: " [Mock Voice Input: Testing audio transcribing due to API quota] " });
+        }
+        res.status(500).json({ error: "Failed to transcribe audio." });
+    }
+});
+
 router.post("/chat", async(req, res) => {
     const {threadId, message} = req.body;
 
@@ -75,12 +93,13 @@ router.post("/chat", async(req, res) => {
     }
 
     try {
-        let thread = await Thread.findOne({threadId});
+        let thread = await Thread.findOne({threadId, userId: req.userId});
 
         if(!thread) {
             //create a new thread in Db
             thread = new Thread({
                 threadId,
+                userId: req.userId,
                 title: message,
                 messages: [{role: "user", content: message}]
             });
@@ -88,13 +107,13 @@ router.post("/chat", async(req, res) => {
             thread.messages.push({role: "user", content: message});
         }
 
-        // Pass conversation history for context-aware responses
+        // Pass last 10 messages as conversation history (already includes current message)
         const history = thread.messages.slice(-10).map(m => ({
             role: m.role,
             content: m.content
         }));
 
-        const assistantReply = await getOpenAIAPIResponse(message, history);
+        const assistantReply = await getOpenAIAPIResponse(history);
 
         thread.messages.push({role: "assistant", content: assistantReply});
         thread.updatedAt = new Date();

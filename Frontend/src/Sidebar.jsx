@@ -1,26 +1,36 @@
 import "./Sidebar.css";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useCallback } from "react";
 import { MyContext } from "./MyContext.jsx";
 import {v1 as uuidv1} from "uuid";
+import blacklogo from "./assets/blacklogo.png";
+import API_BASE from "./config.js";
 
 function Sidebar() {
-    const {allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats} = useContext(MyContext);
+    const {allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats, token} = useContext(MyContext);
 
-    const getAllThreads = async () => {
+    const getAllThreads = useCallback(async () => {
         try {
-            const response = await fetch("http://localhost:8080/api/thread");
+            const response = await fetch(`${API_BASE}/api/thread`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
             const res = await response.json();
+            if (!response.ok || !Array.isArray(res)) {
+                setAllThreads([]);
+                return;
+            }
             const filteredData = res.map(thread => ({threadId: thread.threadId, title: thread.title}));
             //console.log(filteredData);
             setAllThreads(filteredData);
         } catch(err) {
             console.log(err);
         }
-    };
+    }, [setAllThreads, token]);
 
     useEffect(() => {
         getAllThreads();
-    }, [currThreadId])
+    }, [currThreadId, getAllThreads])
 
 
     const createNewChat = () => {
@@ -35,7 +45,11 @@ function Sidebar() {
         setCurrThreadId(newThreadId);
 
         try {
-            const response = await fetch(`http://localhost:8080/api/thread/${newThreadId}`);
+            const response = await fetch(`${API_BASE}/api/thread/${newThreadId}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
             const res = await response.json();
             console.log(res);
             setPrevChats(res);
@@ -48,7 +62,12 @@ function Sidebar() {
 
     const deleteThread = async (threadId) => {
         try {
-            const response = await fetch(`http://localhost:8080/api/thread/${threadId}`, {method: "DELETE"});
+            const response = await fetch(`${API_BASE}/api/thread/${threadId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
             const res = await response.json();
             console.log(res);
 
@@ -67,7 +86,7 @@ function Sidebar() {
     return (
         <section className="sidebar">
             <button onClick={createNewChat}>
-                <img src="src/assets/blacklogo.png" alt="gpt logo" className="logo"></img>
+                <img src={blacklogo} alt="gpt logo" className="logo"></img>
                 <span><i className="fa-solid fa-pen-to-square"></i></span>
             </button>
 
@@ -76,7 +95,7 @@ function Sidebar() {
                 {
                     allThreads?.map((thread, idx) => (
                         <li key={idx} 
-                            onClick={(e) => changeThread(thread.threadId)}
+                            onClick={() => changeThread(thread.threadId)}
                             className={thread.threadId === currThreadId ? "highlighted": " "}
                         >
                             {thread.title}

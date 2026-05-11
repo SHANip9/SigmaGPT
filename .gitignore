@@ -4,5 +4,20 @@
 # Node.js dependencies
 node_modules/
 
-# Environment variables
+# Environment variables (contains secrets)
 .env
+
+# Build outputs
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+Thumbs.db

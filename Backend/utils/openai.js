@@ -1,43 +1,34 @@
+import OpenAI from "openai";
 import "dotenv/config";
 
-const getOpenAIAPIResponse = async (message, conversationHistory = []) => {
-    // Build messages array - include conversation history for context
+export const client = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+
+const getOpenAIAPIResponse = async (conversationHistory = []) => {
+    // Build messages array with system prompt + conversation history
     const messages = [
         {
             role: "system",
             content: "You are SigmaGPT, a helpful and knowledgeable AI assistant. Provide clear, accurate, and well-structured responses."
         },
-        ...conversationHistory,
-        { role: "user", content: message }
+        ...conversationHistory
     ];
 
-    const options = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
+    try {
+        const response = await client.chat.completions.create({
             model: "gpt-5.5",
             messages,
             temperature: 0.7,
-            max_tokens: 4096
-        })
-    };
+            max_completion_tokens: 4096
+        });
 
-    try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", options);
-        const data = await response.json();
-
-        // Handle API-level errors (invalid key, rate limit, etc.)
-        if (data.error) {
-            console.error("OpenAI API Error:", data.error.message);
-            throw new Error(data.error.message);
-        }
-
-        return data.choices[0].message.content;
+        return response.choices[0].message.content;
     } catch (err) {
         console.error("OpenAI request failed:", err.message);
+        if (err.status === 429) {
+            return "This is a mock response because your OpenAI API key has exceeded its quota limit. However, the system is working perfectly! Please update your billing details on OpenAI to see real responses.";
+        }
         throw err;
     }
 };

@@ -1,18 +1,3 @@
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-
----
-
 # 🧵 SigmaGPT — Thread Workflow Diagram
 
 ## Architecture Overview
@@ -56,7 +41,7 @@ graph TB
 
 ## Shared State (via Context)
 
-All thread-related state lives in `App.jsx` and is shared through `MyContext.jsx`:
+All thread-related state lives in [App.jsx](file:///f:/Major%20Projects/SigmaGPT/Frontend/src/App.jsx) and is shared through [MyContext.jsx](file:///f:/Major%20Projects/SigmaGPT/Frontend/src/MyContext.jsx):
 
 | State Variable | Type | Purpose |
 |---|---|---|
@@ -71,7 +56,7 @@ All thread-related state lives in `App.jsx` and is shared through `MyContext.jsx
 
 ## Data Model (MongoDB)
 
-Defined in `models/Thread.js`:
+Defined in [Thread.js](file:///f:/Major%20Projects/SigmaGPT/Backend/models/Thread.js):
 
 ```mermaid
 erDiagram
@@ -116,7 +101,7 @@ sequenceDiagram
 - A brand-new UUID is generated client-side (`uuidv1()`)
 - All chat state is cleared — no backend call yet
 - The thread is **NOT saved to the database** until the user actually sends a message
-- `Sidebar.jsx` → `createNewChat()`
+- [Sidebar.jsx](file:///f:/Major%20Projects/SigmaGPT/Frontend/src/Sidebar.jsx#L26-L32) → `createNewChat()`
 
 ---
 
@@ -169,12 +154,12 @@ sequenceDiagram
 
 | Condition | What Happens | File |
 |---|---|---|
-| `Thread.findOne({threadId})` returns `null` | **New Thread created** in DB with `title = first message` | `routes/chat.js:L80-L86` |
-| Thread already exists | User message **pushed** to existing `messages[]` array | `routes/chat.js:L87-L89` |
+| `Thread.findOne({threadId})` returns `null` | **New Thread created** in DB with `title = first message` | [routes/chat.js:L80-L86](file:///f:/Major%20Projects/SigmaGPT/Backend/routes/chat.js#L80-L86) |
+| Thread already exists | User message **pushed** to existing `messages[]` array | [routes/chat.js:L87-L89](file:///f:/Major%20Projects/SigmaGPT/Backend/routes/chat.js#L87-L89) |
 
 **After the reply returns:**
-- `ChatWindow.jsx` `useEffect([reply])` appends both user + assistant messages to `prevChats`
-- `Chat.jsx` `useEffect([prevChats, reply])` animates the latest reply word-by-word
+- [ChatWindow.jsx](file:///f:/Major%20Projects/SigmaGPT/Frontend/src/ChatWindow.jsx#L40-L54) `useEffect([reply])` appends both user + assistant messages to `prevChats`
+- [Chat.jsx](file:///f:/Major%20Projects/SigmaGPT/Frontend/src/Chat.jsx#L12-L32) `useEffect([prevChats, reply])` animates the latest reply word-by-word
 
 ---
 
@@ -215,7 +200,7 @@ sequenceDiagram
 **Why `setReply(null)` matters:**
 - Setting reply to `null` makes `Chat.jsx` set `latestReply = null`
 - This skips the typing animation and renders the **last message instantly** via the `non-typing` branch
-- `Chat.jsx:L55-L58` — renders `prevChats[last].content` directly
+- [Chat.jsx:L55-L58](file:///f:/Major%20Projects/SigmaGPT/Frontend/src/Chat.jsx#L55-L58) — renders `prevChats[last].content` directly
 
 ---
 

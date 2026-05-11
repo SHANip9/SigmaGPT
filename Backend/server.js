@@ -3,33 +3,52 @@ import "dotenv/config";
 import cors from "cors";
 import mongoose from "mongoose";
 import chatRoutes from "./routes/chat.js";
+import authRoutes from "./routes/auth.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// ─── Middleware ───
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || "*",
+    credentials: true
+}));
 
-app.use("/api", chatRoutes);
-
-// Health check endpoint
-app.get("/health", (req, res) => {
-    res.json({ status: "ok", model: "gpt-5.5" });
+// ─── Health Check (no auth required) ───
+app.get("/", (req, res) => {
+    res.json({ status: "ok", message: "SigmaGPT API is running" });
 });
 
+app.get("/api/health", (req, res) => {
+    const dbState = mongoose.connection.readyState;
+    const states = { 0: "disconnected", 1: "connected", 2: "connecting", 3: "disconnecting" };
+    res.json({
+        status: "ok",
+        database: states[dbState] || "unknown",
+        timestamp: new Date().toISOString()
+    });
+});
+
+// ─── Routes ───
+app.use("/api/auth", authRoutes);
+app.use("/api", chatRoutes);
+
+// ─── Connect to MongoDB, then start server ───
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URI);
-        console.log("Connected with Database!");
+        console.log("✅ Connected to MongoDB!");
     } catch (err) {
-        console.log("Failed to connect with Db", err);
+        console.error("❌ Failed to connect to MongoDB:", err.message);
         process.exit(1);
     }
 };
 
-// Connect to DB first, then start server
 connectDB().then(() => {
     app.listen(PORT, () => {
-        console.log(`SigmaGPT server running on port ${PORT}`);
+        console.log(`🚀 Server running on port ${PORT}`);
     });
 });
+
+export default app;
